@@ -113,7 +113,7 @@ static on_report_options_ptr on_report_options;
 static probe_protect_settings_t probe_protect_settings;
 static on_probe_start_ptr on_probe_start;
 static on_probe_completed_ptr on_probe_completed;
-static on_probe_fixture_ptr on_probe_fixture;
+static on_probe_toolsetter_ptr on_probe_toolsetter;
 static on_spindle_select_ptr on_spindle_select;
 static stepper_pulse_start_ptr stepper_pulse_start;
 static spindle_set_state_ptr on_spindle_set_state = NULL;
@@ -274,12 +274,12 @@ static void tool_changed (tool_data_t *tool){
         on_tool_changed(tool);
 } 
 
-//The grbl.on_probe_fixture event handler is called by the default tool change algorithm when probing at G59.3.
+//The grbl.on_probe_toolsetter event handler is called by the default tool change algorithm when probing at G59.3.
 //In addition it will be called on a "normal" probe sequence if the XY position is
 //within the radius of the G59.3 position defined below.
 // When called from "normal" probing tool is always NULL, when called from within
 // a tool change sequence (M6) then tool is a pointer to the selected tool.
-bool probe_fixture (tool_data_t *tool, bool at_g59_3, bool on)
+bool probe_toolsetter (tool_data_t *tool, coord_data_t *position, bool at_g59_3, bool on)
 {
     bool status = true;
 
@@ -319,8 +319,8 @@ bool probe_fixture (tool_data_t *tool, bool at_g59_3, bool on)
         protection_on();      //restore protection.  
     }
 
-    if(on_probe_fixture)
-        status = on_probe_fixture(tool, at_g59_3, on);
+    if(on_probe_toolsetter)
+        status = on_probe_toolsetter(tool, NULL, at_g59_3, on);
 
     return status;
 }
@@ -584,8 +584,8 @@ void probe_protect_init (void)
     on_tool_changed = grbl.on_tool_changed;
     grbl.on_tool_changed = tool_changed;
 
-    on_probe_fixture = grbl.on_probe_fixture;
-    grbl.on_probe_fixture = probe_fixture;
+    on_probe_toolsetter = grbl.on_probe_toolsetter;
+    grbl.on_probe_toolsetter = probe_toolsetter;
 
     on_probe_completed = grbl.on_probe_completed;
     grbl.on_probe_completed = probe_completed;
